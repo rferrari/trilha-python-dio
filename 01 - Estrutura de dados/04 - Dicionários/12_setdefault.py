@@ -1,4 +1,5 @@
-contato = {"nome": "Guilherme", "telefone": "3333-2221"}
+contato = {"nome": "Guilherme", "telefone": "3333-2221",
+           "nome1": "Guil", "telefone": "3333-2221"}
 
 contato.setdefault("nome", "Giovanna")  # "Guilherme"
 print(contato)  # {'nome': 'Guilherme', 'telefone': '3333-2221'}

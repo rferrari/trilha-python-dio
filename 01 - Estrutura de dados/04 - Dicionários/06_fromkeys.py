@@ -3,3 +3,4 @@ print(resultado)
 
 resultado = dict.fromkeys(["nome", "telefone"], "vazio")  # {"nome": "vazio", "telefone": "vazio"}
 print(resultado)
+
