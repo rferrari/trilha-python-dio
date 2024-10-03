@@ -1,6 +1,9 @@
 import textwrap
 from abc import ABC, abstractclassmethod, abstractproperty
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+import time
+import pytz
+
 
 
 class ContasIterador:
@@ -165,7 +168,7 @@ class Historico:
             {
                 "tipo": transacao.__class__.__name__,
                 "valor": transacao.valor,
-                "data": datetime.utcnow().strftime("%d-%m-%Y %H:%M:%S"),
+                "data": datetime.utcnow().strftime("%d/%m/%Y %H:%M:%S"),
             }
         )
 
@@ -182,7 +185,7 @@ class Historico:
         transacoes = []
         for transacao in self._transacoes:
             data_transacao = datetime.strptime(
-                transacao["data"], "%d-%m-%Y %H:%M:%S"
+                transacao["data"], "%d/%m/%Y %H:%M:%S"
             ).date()
             if data_atual == data_transacao:
                 transacoes.append(transacao)
@@ -240,7 +243,17 @@ def log_transacao(func):
 
 
 def menu():
-    menu = """\n
+
+    hora_atual = datetime.now().hour
+    if hora_atual < 12:
+        mensagem = "Bom dia!"
+    elif hora_atual < 18:
+        mensagem = "Boa tarde!"
+    else:
+        mensagem = "Boa noite!"
+
+    menu = f"""\n
+    {mensagem} Como posso ajudar?\n
     ================ MENU ================
     [d]\tDepositar
     [s]\tSacar
@@ -248,6 +261,8 @@ def menu():
     [nc]\tNova conta
     [lc]\tListar contas
     [nu]\tNovo usuário
+    [demo]\tCriar Templates Demonstracao
+    [itc]\tImprimir Todos Clientes
     [q]\tSair
     => """
     return input(textwrap.dedent(menu))
@@ -323,13 +338,13 @@ def exibir_extrato(clientes):
     tem_transacao = False
     for transacao in conta.historico.gerar_relatorio():
         tem_transacao = True
-        extrato += f"\n{transacao['data']}\n{transacao['tipo']}:\n\tR$ {transacao['valor']:.2f}"
+        extrato += f"\n{transacao['data']}\t{transacao['tipo']}:\tR$ {transacao['valor']:.2f}"
 
     if not tem_transacao:
         extrato = "Não foram realizadas movimentações"
 
     print(extrato)
-    print(f"\nSaldo:\n\tR$ {conta.saldo:.2f}")
+    print(f"\nSaldo:\t\tR$ {conta.saldo:.2f}")
     print("==========================================")
 
 
@@ -354,7 +369,70 @@ def criar_cliente(clientes):
 
     clientes.append(cliente)
 
-    print("\n=== Cliente criado com sucesso! ===")
+    now = datetime.now().strftime("%d/%m/%y %H:%M")
+    print(f"\n=== Cliente criado com sucesso @ {now}! ===")
+
+
+def criar_templates(contas, clientes):
+    start_time = datetime.now(timezone.utc)
+    print(f"\n=== Iniciando Rotina Criacao Clientes Demonstracao ===")
+    for i in range(10):
+        cpf = (str(i) * 9) + "00"
+
+        if filtrar_cliente(cpf, clientes):
+            print("\n@@@ Já existe cliente com esse CPF! @@@")
+        else:
+            nome = "Cliente 0"+str(i+1)
+            print("Cadastrado cliente: " + nome)
+
+            hora_atual = datetime.now()
+            data_nascimento = hora_atual.replace(year=hora_atual.year-10-i, month=hora_atual.month, day=hora_atual.day) - timedelta(days=i)
+            # print(data_nascimento.strftime("%d-%m-%Y"))
+
+            endereco = "Endereço Cliente " + str(i+1)
+
+            cliente = PessoaFisica(
+                nome=nome, data_nascimento=data_nascimento, cpf=cpf, endereco=endereco
+            )
+
+            clientes.append(cliente)
+
+            numero_conta = len(contas) + 1
+            conta = ContaCorrente.nova_conta(
+                cliente=cliente, numero=numero_conta, limite=500, limite_saques=50
+            )
+            contas.append(conta)
+            cliente.contas.append(conta)
+
+            print("Cliente Cadastrado Com sucesso!")
+            print(f"Nome: {cliente.nome}, CPF: {cliente.cpf}, Nasc.: {cliente.data_nascimento}, End.: {cliente.endereco}")
+            print(f"  Número da Conta: {conta.numero}")
+            time.sleep(1+(i/10))
+    
+    # Captura o horário de fim em UTC
+    end_time = datetime.now(timezone.utc)
+
+    # Calcula a diferença em segundos
+    elapsed_time = (end_time - start_time).total_seconds()
+    print(f"Clientes Cadastrados em {elapsed_time:.2f} segundos")
+
+
+def imprimir_todos_clientes(contas, clientes):
+    start_time = datetime.now(timezone.utc)
+
+    for cliente in clientes:
+        print(f"Nome: {cliente.nome}, CPF: {cliente.cpf}, Nasc.: {cliente.data_nascimento}, End.: {cliente.endereco}")
+        for conta in cliente.contas:
+            print(f"  Número da Conta: {conta.numero}")
+            time.sleep(1)
+    
+    # Captura o horário de fim em UTC
+    end_time = datetime.now(timezone.utc)
+
+    # Calcula a diferença em segundos
+    elapsed_time = (end_time - start_time).total_seconds()
+    print(f"Lista de Clientes Impressa em {elapsed_time:.2f} segundos")
+
 
 
 @log_transacao
@@ -385,6 +463,24 @@ def main():
     clientes = []
     contas = []
 
+    # Definindo os fusos horários
+    fuso_suica = pytz.timezone('Europe/Zurich')
+    fuso_tokyo = pytz.timezone('Asia/Tokyo')
+    fuso_los_angeles = pytz.timezone('America/Los_Angeles')
+
+    # Convertendo a hora atual para os fusos horários definidos
+    hora_atual = datetime.now()
+    hora_suica = hora_atual.astimezone(fuso_suica)
+    hora_tokyo = hora_atual.astimezone(fuso_tokyo)
+    hora_los_angeles = hora_atual.astimezone(fuso_los_angeles)
+
+    # Exibindo as horas
+    print()
+    print(f"Hora local: {hora_atual.strftime('%m-%d %H:%M')}")
+    print(f"Horário na Suíça: {hora_suica.strftime('%m-%d %H:%M')}")
+    print(f"Horário em Tóquio: {hora_tokyo.strftime('%m-%d %H:%M')}")
+    print(f"Horário em Los Angeles: {hora_los_angeles.strftime('%m-%d %H:%M')}")
+
     while True:
         opcao = menu()
 
@@ -409,6 +505,12 @@ def main():
 
         elif opcao == "q":
             break
+
+        elif opcao == "demo":
+            criar_templates(contas, clientes)
+
+        elif opcao == "itc":
+            imprimir_todos_clientes(contas, clientes)
 
         else:
             print(

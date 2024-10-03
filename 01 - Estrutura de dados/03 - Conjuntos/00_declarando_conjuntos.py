@@ -6,3 +6,6 @@ print(letras)  # {"b", "a", "c", "x", "i"}
 
 carros = set(("palio", "gol", "celta", "palio"))
 print(carros)  # {"gol", "celta", "palio"}
+
+my_set = {"my", "set"}
+print(my_set)
