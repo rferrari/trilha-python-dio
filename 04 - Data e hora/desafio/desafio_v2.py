@@ -36,7 +36,7 @@ class Cliente:
         self.indice_conta = 0
 
     def realizar_transacao(self, conta, transacao):
-        if len(conta.historico.transacoes_do_dia()) >= 2:
+        if len(conta.historico.transacoes_do_dia()) >= 10:
             print("\n@@@ Você excedeu o número de transações permitidas para hoje! @@@")
             return
 
