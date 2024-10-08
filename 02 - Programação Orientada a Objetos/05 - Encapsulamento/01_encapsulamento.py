@@ -18,6 +18,6 @@ class Conta:
 
 conta = Conta("0001", 100)
 conta.depositar(100)
-conta._saldo += 1000
+conta._saldo += 1000        # do not compile it, but its a convention
 print(conta.nro_agencia)
 print(conta.mostrar_saldo())
