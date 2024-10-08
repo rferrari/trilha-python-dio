@@ -60,11 +60,11 @@ class Conta:
         excedeu_saldo = valor > saldo
 
         if excedeu_saldo:
-            print("\n@@@ Operação falhou! Você não tem saldo suficiente. @@@")
+            print("\n@@@ Operação falhou! "+self._cliente.nome+" não tem saldo suficiente. @@@")
 
         elif valor > 0:
             self._saldo -= valor
-            print("\n=== Saque realizado com sucesso! ===")
+            print("\n=== Saque realizado com sucesso para "+self._cliente.nome+"d! ===")
             return True
 
         else:
@@ -75,7 +75,7 @@ class Conta:
     def depositar(self, valor):
         if valor > 0:
             self._saldo += valor
-            print("\n=== Depósito realizado com sucesso! ===")
+            print("\n=== Depósito realizado com sucesso para "+self._cliente.nome+"! ===")
         else:
             print("\n@@@ Operação falhou! O valor informado é inválido. @@@")
             return False
@@ -133,6 +133,12 @@ class Historico:
             }
         )
 
+    def imprimir_transacoes(self):
+        if not self._transacoes:
+            print("Não foram realizadas movimentações.")
+        else:
+            for transacao in self._transacoes:
+                print(f"{transacao['tipo']}:\n\tValor: R$ {transacao['valor']:.2f}\n\tData: {transacao['data']}")
 
 class Transacao(ABC):
     @property
@@ -184,6 +190,7 @@ def menu():
     [nc]\tNova conta
     [lc]\tListar contas
     [nu]\tNovo usuário
+    [audit]\tListar transações de todos os clientes
     [q]\tSair
     => """
     return input(textwrap.dedent(menu))
@@ -266,7 +273,7 @@ def exibir_extrato(clientes):
     print("==========================================")
 
 
-def criar_cliente(clientes):
+def criar_cliente(clientes, contas):
     cpf = input("Informe o CPF (somente número): ")
     cliente = filtrar_cliente(cpf, clientes)
 
@@ -281,11 +288,17 @@ def criar_cliente(clientes):
     cliente = PessoaFisica(nome=nome, data_nascimento=data_nascimento, cpf=cpf, endereco=endereco)
 
     clientes.append(cliente)
+    #criar_conta(numero_conta, clientes, contas)
+    numero_conta = len(contas) + 1
+    conta = ContaCorrente.nova_conta(cliente=cliente, numero=numero_conta)
+    contas.append(conta)
+    cliente.contas.append(conta)
 
-    print("\n=== Cliente criado com sucesso! ===")
+    print("\n=== Cliente criado com sucesso! Conta:\n  ===")
+    print(str(cliente.contas[len(cliente.contas)-1]))
 
 
-def criar_conta(numero_conta, clientes, contas):
+def criar_conta(clientes, contas):
     cpf = input("Informe o CPF do cliente: ")
     cliente = filtrar_cliente(cpf, clientes)
 
@@ -293,6 +306,7 @@ def criar_conta(numero_conta, clientes, contas):
         print("\n@@@ Cliente não encontrado, fluxo de criação de conta encerrado! @@@")
         return
 
+    numero_conta = len(contas) + 1
     conta = ContaCorrente.nova_conta(cliente=cliente, numero=numero_conta)
     contas.append(conta)
     cliente.contas.append(conta)
@@ -304,6 +318,14 @@ def listar_contas(contas):
     for conta in contas:
         print("=" * 100)
         print(textwrap.dedent(str(conta)))
+
+def listar_transacoes_auditoria(clientes):
+    for cliente in clientes:
+        print(f"\nCliente: {cliente.nome} - CPF: {cliente.cpf}")
+        for conta in cliente.contas:
+            print(f"\nConta: {conta.numero} - Agência: {conta.agencia}")
+            conta.historico.imprimir_transacoes()  # Chama o método de impressão de transações
+            print(f"\nSaldo atual: R$ {conta.saldo:.2f}")
 
 
 def main():
@@ -323,11 +345,14 @@ def main():
             exibir_extrato(clientes)
 
         elif opcao == "nu":
-            criar_cliente(clientes)
+            criar_cliente(clientes, contas)
 
         elif opcao == "nc":
-            numero_conta = len(contas) + 1
-            criar_conta(numero_conta, clientes, contas)
+            #numero_conta = len(contas) + 1
+            criar_conta(clientes, contas)
+
+        elif opcao == "audit":
+            listar_transacoes_auditoria(clientes)
 
         elif opcao == "lc":
             listar_contas(contas)
@@ -340,3 +365,44 @@ def main():
 
 
 main()
+
+
+
+
+#
+# Cliente: fail - CPF: `1
+
+# Conta: 1 - Agência: 0001
+# Não foram realizadas movimentações.
+
+# Saldo atual: R$ 0.00
+
+# Cliente: adam - CPF: 1
+
+# Conta: 2 - Agência: 0001
+# Deposito:
+#         Valor: R$ 10.00
+#         Data: 08-10-2024 01:29:1728361762
+# Deposito:
+#         Valor: R$ 20.00
+#         Data: 08-10-2024 01:29:1728361765
+# Saque:
+#         Valor: R$ 1.00
+#         Data: 08-10-2024 01:29:1728361768
+
+# Saldo atual: R$ 29.00
+
+# Cliente: rick - CPF: 2
+
+# Conta: 3 - Agência: 0001
+# Deposito:
+#         Valor: R$ 20.00
+#         Data: 08-10-2024 01:29:1728361797
+# Deposito:
+#         Valor: R$ 10.00
+#         Data: 08-10-2024 01:30:1728361803
+# Saque:
+#         Valor: R$ 1.00
+#         Data: 08-10-2024 01:30:1728361806
+
+# Saldo atual: R$ 29.00
