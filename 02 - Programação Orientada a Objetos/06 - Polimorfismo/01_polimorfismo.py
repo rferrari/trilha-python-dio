@@ -23,6 +23,7 @@ def plano_voo(obj):
     obj.voar()
 
 
+plano_voo(Passaro())
 plano_voo(Pardal())
 plano_voo(Avestruz())
 plano_voo(Aviao())

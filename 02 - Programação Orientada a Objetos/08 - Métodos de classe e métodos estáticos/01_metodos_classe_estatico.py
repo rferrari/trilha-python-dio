@@ -2,6 +2,7 @@ class Pessoa:
     def __init__(self, nome, idade):
         self.nome = nome
         self.idade = idade
+        print("Pessoa nasceu, seu nome sera:" + self.nome)
 
     @classmethod
     def criar_de_data_nascimento(cls, ano, mes, dia, nome):
@@ -10,11 +11,18 @@ class Pessoa:
 
     @staticmethod
     def e_maior_idade(idade):
-        return idade >= 18
+        #print(self.nome)
+        return idade >= 21
 
 
 p = Pessoa.criar_de_data_nascimento(1994, 3, 21, "Guilherme")
 print(p.nome, p.idade)
 
-print(Pessoa.e_maior_idade(18))
-print(Pessoa.e_maior_idade(8))
+print(Pessoa.e_maior_idade(p.idade))
+print(Pessoa.e_maior_idade(p.idade-5))
+
+
+
+p2 = Pessoa("Nome",21).criar_de_data_nascimento(1994, 3, 21, "Guilherme")
+print(p2.nome)
+print(Pessoa.e_maior_idade(p2.idade))
