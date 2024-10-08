@@ -54,3 +54,38 @@ controle = ControleArCondicionado()
 controle.ligar()
 controle.desligar()
 print(controle.marca)
+
+
+
+class ControleGeladeira(ControleRemoto):
+    def __init__(self):
+        self.super = True
+        self.ligar()
+
+    def ligar(self):
+        print("Ligando a Geladeira...")
+        if(self.super):
+            print("Ligando a Super Gelo...")
+        print("Geladeira On!")
+
+    def desligar(self):
+        print("Desligando o Geladeira...")
+        print("Geladeira Off!")
+
+    def superGelo(self):
+        if(self.super):
+            print("Desligando Super Gelo...")    
+        else:
+            print("Ligando Super Gelo...")
+        self.super = not self.super
+        print("Desligado!")
+
+    @property
+    def marca(self):
+        return "Gelato"
+
+
+crGeladeira = ControleGeladeira()
+crGeladeira.superGelo()
+crGeladeira.superGelo()
+crGeladeira.superGelo()
